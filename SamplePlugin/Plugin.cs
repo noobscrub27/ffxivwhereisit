@@ -1,12 +1,13 @@
-﻿using Dalamud.Game.Command;
+using Dalamud.Game.Command;
+using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using System.IO;
-using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
-using SamplePlugin.Windows;
+using WhereIsItPlugin.Windows;
+using Lumina.Excel.Sheets;
+using System;
 
-namespace SamplePlugin;
+namespace WhereIsItPlugin;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -17,12 +18,17 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
+    [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 
-    private const string CommandName = "/pmycommand";
+    private const string MenuCommandName = "/whereisit";
+    private const string LocateCommandName = "/wit_locate";
+    private const string SavePositionCommandName = "/wit_save";
+    private const string ComparePositionCommandName = "/wit_compare";
 
     public Configuration Configuration { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("SamplePlugin");
+    public readonly WindowSystem WindowSystem = new("WhereIsItPlugin");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
@@ -30,18 +36,27 @@ public sealed class Plugin : IDalamudPlugin
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
-        // You might normally want to embed resources and load them from the manifest stream
-        var goatImagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-
         ConfigWindow = new ConfigWindow(this);
-        MainWindow = new MainWindow(this, goatImagePath);
+        MainWindow = new MainWindow(this);
 
         WindowSystem.AddWindow(ConfigWindow);
         WindowSystem.AddWindow(MainWindow);
 
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+        CommandManager.AddHandler(MenuCommandName, new CommandInfo(MenuCommand)
         {
-            HelpMessage = "A useful message to display in /xlhelp"
+            HelpMessage = "Opens WhereIsIt menu."
+        });
+        CommandManager.AddHandler(LocateCommandName, new CommandInfo(LocateCommand)
+        {
+            HelpMessage = "Prints the target's location."
+        });
+        CommandManager.AddHandler(SavePositionCommandName, new CommandInfo(SavePositionCommand)
+        {
+            HelpMessage = "Saves your target's location."
+        });
+        CommandManager.AddHandler(ComparePositionCommandName, new CommandInfo(ComparePositionCommand)
+        {
+            HelpMessage = "Compares your target's location with your saved location."
         });
 
         // Tell the UI system that we want our windows to be drawn through the window system
@@ -56,8 +71,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // Add a simple message to the log with level set to information
         // Use /xllog to open the log window in-game
-        // Example Output: 00:57:54.959 | INF | [SamplePlugin] ===A cool log message from Sample Plugin===
-        Log.Information($"===A cool log message from {PluginInterface.Manifest.Name}===");
+        // Example Output: 00:57:54.959 | INF | [WhereIsItPlugin] ===A cool log message from Sample Plugin===
     }
 
     public void Dispose()
@@ -72,15 +86,138 @@ public sealed class Plugin : IDalamudPlugin
         ConfigWindow.Dispose();
         MainWindow.Dispose();
 
-        CommandManager.RemoveHandler(CommandName);
+        CommandManager.RemoveHandler(MenuCommandName);
+        CommandManager.RemoveHandler(LocateCommandName);
+        CommandManager.RemoveHandler(MenuCommandName);
+        CommandManager.RemoveHandler(MenuCommandName);
+    }
+    public string GetSavedPositionText()
+    {
+        if (Configuration.savedZoneName is null | Configuration.savedTargetName is null)
+        {
+            return "Current saved location: none";
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(Configuration.savedZoneName) | string.IsNullOrWhiteSpace(Configuration.savedZoneName))
+            {
+                return $"Current saved location: {Configuration.savedPosition} in (unknown zone)";
+            }
+            else
+            {
+                return $"Current saved location: {Configuration.savedPosition} in {Configuration.savedZoneName}";
+            }
+        }
+    }
+    private void MenuCommand(string command, string args)
+    {
+        ToggleMainUi();
+    }
+    private void LocateCommand(string command, string args)
+    {
+        DisplayTargetLocation();
+    }
+    private void SavePositionCommand(string command, string args)
+    {
+        SaveTargetLocation();
+    }
+    private void ComparePositionCommand(string command, string args)
+    {
+        CompareDistance();
+    }
+    public void DisplayTargetLocation()
+    {
+        var currentTarget = TargetManager.Target;
+        if (currentTarget is null)
+        {
+            SendEchoChat($"No target to locate.");
+        }
+        else
+        {
+            SendEchoChat($"{currentTarget.Name}'s location: {currentTarget.Position}");
+        }
+    }
+    public void SaveTargetLocation()
+    {
+        var currentTarget = TargetManager.Target;
+        if (currentTarget is null)
+        {
+            SendEchoChat($"No target to save location of.");
+        }
+        else
+        {
+            var zoneName = GetZone();
+            if (zoneName is null)
+            {
+                SendEchoChat($"The target's zone could not be identified, so its location was not saved.");
+            }
+            else
+            {
+                Configuration.savedZoneName = zoneName;
+                Configuration.savedTargetName = currentTarget.Name.ToString();
+                Configuration.savedPosition = currentTarget.Position;
+                Configuration.Save();
+                SendEchoChat($"Saved {currentTarget.Name}'s location: {currentTarget.Position}");
+            }
+        }
+    }
+    public void ClearSavedLocation()
+    {
+        Configuration.savedZoneName = null;
+        Configuration.savedTargetName = null;
+        Configuration.savedPosition = new System.Numerics.Vector3();
+        Configuration.Save();
+        SendEchoChat($"Cleared saved location.");
+    }
+    public void CompareDistance()
+    {
+        var currentTarget = TargetManager.Target;
+        if (currentTarget is null)
+        {
+            SendEchoChat($"No target to compare.");
+        }
+        else if (Configuration.savedZoneName is null | Configuration.savedTargetName is null)
+        {
+            SendEchoChat($"The target's location could not be compared because there is no saved target.");
+        }
+        else
+        {
+            var zoneName = GetZone();
+            if (zoneName is null)
+            {
+                SendEchoChat($"The target's zone could not be identified, so its location cannot be compared.");
+            }
+            else if (zoneName != Configuration.savedZoneName)
+            {
+                SendEchoChat($"The target's zone is different from the saved location's zone, so their locations cannot be compared.");
+            }
+            else
+            {
+                var currentPosition = currentTarget.Position;
+                var distanceBase = 
+                    Math.Pow((Configuration.savedPosition.X - currentPosition.X), 2) +
+                    Math.Pow((Configuration.savedPosition.Z - currentPosition.Z), 2);
+                var distance2d = Math.Sqrt(distanceBase);
+                var distance3d = Math.Sqrt(distanceBase + Math.Pow((Configuration.savedPosition.Y - currentPosition.Y), 2));
+                SendEchoChat($"Saved location -> {currentTarget.Name}: {distance2d} (2D), {distance3d} (3D)");
+            }
+        }
+    }
+    public string? GetZone()
+    {
+        var territoryId = Plugin.ClientState.TerritoryType;
+        if (Plugin.DataManager.GetExcelSheet<TerritoryType>().TryGetRow(territoryId, out var territoryRow))
+        {
+            return territoryRow.PlaceName.Value.Name.ToString();
+        }
+        return null;
     }
 
-    private void OnCommand(string command, string args)
+    public void SendEchoChat(string message)
     {
-        // In response to the slash command, toggle the display status of our main ui
-        MainWindow.Toggle();
+        Chat.Print(message, "WIT");
     }
-    
+
     public void ToggleConfigUi() => ConfigWindow.Toggle();
     public void ToggleMainUi() => MainWindow.Toggle();
 }

@@ -1,0 +1,11 @@
+{
+  "Author": "noobscrub",
+  "Name": "WhereIsIt",
+  "Punchline": "lets you see, save, and compare exact coordinate locations",
+  "Description": "/whereisit opens menu, /wit_locate shows location, /wit_save saves location, /wit_compare compares locations",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "sample",
+    "plugin"
+  ]
+}

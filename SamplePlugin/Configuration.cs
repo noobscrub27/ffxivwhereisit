@@ -1,15 +1,16 @@
-﻿using Dalamud.Configuration;
+using Dalamud.Configuration;
 using System;
 
-namespace SamplePlugin;
+namespace WhereIsItPlugin;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
     public int Version { get; set; } = 0;
 
-    public bool IsConfigWindowMovable { get; set; } = true;
-    public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+    public string? savedZoneName { get; set; }
+    public System.Numerics.Vector3 savedPosition { get; set; }
+    public string? savedTargetName { get; set; }
 
     // The below exists just to make saving less cumbersome
     public void Save()
