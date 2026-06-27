@@ -1,19 +1,21 @@
-{
-	"Author":"noobscrub",
-	"Name":"Where Is It",
-	"Description":"/whereisit opens menu, /wit_locate shows location, /wit_save saves location, /wit_compare compares locations",
-	"Punchline": "lets you see, save, and compare exact coordinate locations",
-	"InternalName":"WhereIsIt",
-	"AssemblyVersion":"0.1.0",
-	"TestingAssemblyVersion":null,
-	"RepoUrl":"https://github.com/noobscrub27/ffxivwhereisit",
-	"DownloadLinkInstall": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
-	"DownloadLinkTesting": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
-	"DownloadLinkUpdate": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
-	"LastUpdate": "1782520526",
-	"Tags": [
-		"location",
-		"distance",
-		"comparison"
-	],
-},
+[
+	{
+		"Author":"noobscrub",
+		"Name":"Where Is It",
+		"Description":"/whereisit opens menu, /wit_locate shows location, /wit_save saves location, /wit_compare compares locations",
+		"Punchline": "lets you see, save, and compare exact coordinate locations",
+		"InternalName":"WhereIsIt",
+		"AssemblyVersion":"0.1.0",
+		"TestingAssemblyVersion":null,
+		"RepoUrl":"https://github.com/noobscrub27/ffxivwhereisit",
+		"DownloadLinkInstall": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
+		"DownloadLinkTesting": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
+		"DownloadLinkUpdate": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.1.0/WhereIsit.zip",
+		"LastUpdate": "1782520526",
+		"Tags": [
+			"location",
+			"distance",
+			"comparison"
+		],
+	},
+]
