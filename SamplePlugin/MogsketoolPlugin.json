@@ -1,7 +1,7 @@
 {
   "Author": "noobscrub",
   "Name": "Mogsketool",
-  "Punchline": "lets you see, save, and compare exact coordinate locations",
+  "Punchline": "a suprise tool to help us later",
   "Description": "/mogsketool opens menu, /mt_locate shows location, /mt_savepos saves location, /mt_comparepos compares locations",
   "ApplicableVersion": "any",
   "Tags": [

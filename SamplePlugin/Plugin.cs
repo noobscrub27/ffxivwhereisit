@@ -7,9 +7,7 @@ using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using System;
 using MogsketoolPlugin.Windows;
-using Lumina.Text;
 using Lumina.Text.ReadOnly;
-using Dalamud.Game.Text.SeStringHandling;
 namespace MogsketoolPlugin;
 
 public sealed class Plugin : IDalamudPlugin
