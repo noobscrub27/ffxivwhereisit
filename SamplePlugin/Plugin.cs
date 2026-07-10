@@ -1,13 +1,16 @@
+using Dalamud.Game.Chat;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using WhereIsItPlugin.Windows;
 using Lumina.Excel.Sheets;
 using System;
-
-namespace WhereIsItPlugin;
+using MogsketoolPlugin.Windows;
+using Lumina.Text;
+using Lumina.Text.ReadOnly;
+using Dalamud.Game.Text.SeStringHandling;
+namespace MogsketoolPlugin;
 
 public sealed class Plugin : IDalamudPlugin
 {
@@ -21,14 +24,14 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
     [PluginService] internal static IChatGui Chat { get; private set; } = null!;
 
-    private const string MenuCommandName = "/whereisit";
-    private const string LocateCommandName = "/wit_locate";
-    private const string SavePositionCommandName = "/wit_save";
-    private const string ComparePositionCommandName = "/wit_compare";
+    private const string MenuCommandName = "/mogsketool";
+    private const string LocateCommandName = "/mt_locate";
+    private const string SavePositionCommandName = "/mt_savepos";
+    private const string ComparePositionCommandName = "/mt_comparepos";
 
     public Configuration Configuration { get; init; }
 
-    public readonly WindowSystem WindowSystem = new("WhereIsItPlugin");
+    public readonly WindowSystem WindowSystem = new("Mogsketool");
     private ConfigWindow ConfigWindow { get; init; }
     private MainWindow MainWindow { get; init; }
 
@@ -44,7 +47,7 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.AddHandler(MenuCommandName, new CommandInfo(MenuCommand)
         {
-            HelpMessage = "Opens WhereIsIt menu."
+            HelpMessage = "Opens Mogsketool menu."
         });
         CommandManager.AddHandler(LocateCommandName, new CommandInfo(LocateCommand)
         {
@@ -69,9 +72,11 @@ public sealed class Plugin : IDalamudPlugin
         // Adds another button doing the same but for the main ui of the plugin
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
 
+        Chat.ChatMessage += OnChatMessage;
+
         // Add a simple message to the log with level set to information
         // Use /xllog to open the log window in-game
-        // Example Output: 00:57:54.959 | INF | [WhereIsItPlugin] ===A cool log message from Sample Plugin===
+        // Example Output: 00:57:54.959 | INF | [MogsketoolPlugin] ===A cool log message from Sample Plugin===
     }
 
     public void Dispose()
@@ -80,7 +85,8 @@ public sealed class Plugin : IDalamudPlugin
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
-        
+        Chat.ChatMessage -= OnChatMessage;
+
         WindowSystem.RemoveAllWindows();
 
         ConfigWindow.Dispose();
@@ -215,9 +221,128 @@ public sealed class Plugin : IDalamudPlugin
 
     public void SendEchoChat(string message)
     {
-        Chat.Print(message, "WIT");
+        Chat.Print(message, "Mogsketool");
+    }
+
+    private void OnChatMessage(IHandleableChatMessage message)
+    {
+        if (message.LogKind == Dalamud.Game.Text.XivChatType.FreeCompany & message.OriginalSender.IsEmpty == false)
+        {
+            TrackKupoGame(message);
+        }
+    }
+
+    private void TrackKupoGame(IHandleableChatMessage message)
+    {
+        string trimmedMessage = message.OriginalMessage.ToString().ToLower().Trim();
+        bool addKupoEntry = false;
+        bool addNonKupoEntry = false;
+        if (trimmedMessage.Contains("kupo!")
+            | trimmedMessage == "k"
+            | trimmedMessage == "u"
+            | trimmedMessage == "p"
+            | trimmedMessage == "o"
+            | trimmedMessage == "!")
+        {
+            addKupoEntry = true;
+            
+        }
+        else
+        {
+            if (Configuration.KupoHistory[0].getNonKupos() > 0)
+            {
+                Configuration.KupoHistory[0].addNonKupo();
+            }
+            else
+            {
+                addNonKupoEntry = true;
+            }
+        }
+        if (addKupoEntry)
+        {
+            KupoMessage kupo = new KupoMessage(true, message);
+            Configuration.KupoHistory.Insert(0, kupo);
+        }
+        else if (addNonKupoEntry)
+        {
+            KupoMessage kupo = new KupoMessage(false, message);
+            Configuration.KupoHistory.Insert(0, kupo);
+        }
+        if (Configuration.KupoHistory.Count >= Configuration.HistorySize)
+        {
+            Configuration.KupoHistory.RemoveRange(Configuration.HistorySize, Configuration.KupoHistory.Count - Configuration.HistorySize);
+        }
+
     }
 
     public void ToggleConfigUi() => ConfigWindow.Toggle();
     public void ToggleMainUi() => MainWindow.Toggle();
+}
+
+public class KupoMessage
+{
+    private int numberOfNonKupos;
+    private ReadOnlySeString textSeString;
+    private DateTime timestamp;
+    private IHandleableChatMessage originalMessage;
+
+    public KupoMessage(bool isKupo, IHandleableChatMessage message)
+    {
+        if (isKupo)
+        {
+            numberOfNonKupos = 0;
+        }
+        else
+        {
+            numberOfNonKupos = 1;
+        }
+        originalMessage = message;
+        timestamp = DateTime.Now;
+        buildText();
+    }
+    private void buildText()
+    {
+        var textBuilder = new Lumina.Text.SeStringBuilder();
+        if (numberOfNonKupos <= 0)
+        {
+            string timestampString = timestamp.ToString("G");
+            string author = originalMessage.OriginalSender.ToString();
+            ReadOnlySeString content = originalMessage.OriginalMessage;
+            textBuilder.Append($"[{timestampString}] ");
+            textBuilder.PushColorRgba(88, 209, 208, 0);
+            textBuilder.Append($"{author}: ");
+            textBuilder.PopColor();
+            textBuilder.PushColorRgba(255, 255, 255, 0);
+            textBuilder.Append(content);
+            textBuilder.PopColor();
+        }
+        else if (numberOfNonKupos == 1)
+        {
+            textBuilder.AppendSetItalic(true);
+            textBuilder.Append("(1 non-kupo message)");
+            textBuilder.AppendSetItalic(false);
+        }
+        else
+        {
+            textBuilder.AppendSetItalic(true);
+            textBuilder.Append($"({numberOfNonKupos} non-kupo messages)");
+            textBuilder.AppendSetItalic(false);
+        }
+        textSeString = textBuilder.ToReadOnlySeString();
+    }
+
+    public void addNonKupo()
+    {
+        numberOfNonKupos++;
+        buildText();
+    }
+
+    public int getNonKupos()
+    {
+        return numberOfNonKupos;
+    }
+    public ReadOnlySeString getSeString()
+    {
+        return textSeString;
+    }
 }

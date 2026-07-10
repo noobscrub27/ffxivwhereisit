@@ -1,0 +1,20 @@
+[
+	{
+		"Author":"noobscrub",
+		"Name":"Mogsketool",
+		"Description":"/mogsketool opens menu, /mt_locate shows location, /mt_savepos saves location, /mt_comparepos compares locations",
+		"Punchline": "a bunch of assorted tools made for my friends",
+		"InternalName":"Mogsketool",
+		"AssemblyVersion":"0.2.0",
+		"TestingAssemblyVersion":null,
+		"RepoUrl":"https://github.com/noobscrub27/ffxivwhereisit",
+		"DownloadLinkInstall": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+		"DownloadLinkTesting": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+		"DownloadLinkUpdate": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+		"LastUpdate": "1783725915",
+		"Tags": [
+			"moogle",
+			"kupo"
+		],
+	},
+]

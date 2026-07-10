@@ -1,7 +1,8 @@
 using Dalamud.Configuration;
 using System;
+using System.Collections.Generic;
 
-namespace WhereIsItPlugin;
+namespace MogsketoolPlugin;
 
 [Serializable]
 public class Configuration : IPluginConfiguration
@@ -12,6 +13,8 @@ public class Configuration : IPluginConfiguration
     public System.Numerics.Vector3 savedPosition { get; set; }
     public string? savedTargetName { get; set; }
 
+    public int HistorySize = 256;
+    public List<KupoMessage> KupoHistory = new List<KupoMessage>();
     // The below exists just to make saving less cumbersome
     public void Save()
     {

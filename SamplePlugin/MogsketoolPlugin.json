@@ -1,8 +1,8 @@
 {
   "Author": "noobscrub",
-  "Name": "WhereIsIt",
+  "Name": "Mogsketool",
   "Punchline": "lets you see, save, and compare exact coordinate locations",
-  "Description": "/whereisit opens menu, /wit_locate shows location, /wit_save saves location, /wit_compare compares locations",
+  "Description": "/mogsketool opens menu, /mt_locate shows location, /mt_savepos saves location, /mt_comparepos compares locations",
   "ApplicableVersion": "any",
   "Tags": [
     "sample",
