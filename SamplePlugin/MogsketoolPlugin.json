@@ -1,11 +1,18 @@
 {
-  "Author": "noobscrub",
-  "Name": "Mogsketool",
-  "Punchline": "a suprise tool to help us later",
-  "Description": "/mogsketool opens menu, /mt_locate shows location, /mt_savepos saves location, /mt_comparepos compares locations",
-  "ApplicableVersion": "any",
-  "Tags": [
-    "sample",
-    "plugin"
-  ]
+	"Author": "noobscrub",
+	"Name": "Mogsketool",
+	"Punchline": "a suprise tool to help us later",
+	"Description": "assorted commands made for my friends",
+	"ApplicableVersion": "any",
+	"AssemblyVersion":"0.2.0",
+	"TestingAssemblyVersion":null,
+	"RepoUrl":"https://github.com/noobscrub27/ffxivwhereisit",
+	"DownloadLinkInstall": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+	"DownloadLinkTesting": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+	"DownloadLinkUpdate": "https://github.com/noobscrub27/ffxivwhereisit/releases/download/0.2.0/Mogsketool.zip",
+	"LastUpdate": "1781156225",
+	"Tags": [
+		"sample",
+		"plugin"
+	]
 }
